@@ -95,7 +95,7 @@ class Migrations
      */
     public function addField( $type, $name, $options = false )
     {
-        $defaults = $this->getDefaults($type);
+        $defaults = $this->getDefaults( $type );
 
         // Add fields to field group
         $fields = [
@@ -129,11 +129,11 @@ class Migrations
             foreach ( $options as $option_key => $option_value ) {
 
                 // Check to see if the option is available
-                if ( ! isset( $fields[$option_key] ) ) {
+                if ( ! isset( $fields[ $option_key ] ) ) {
                     continue;
                 }
 
-                $fields[$option_key] = $option_value;
+                $fields[ $option_key ] = $option_value;
             }
 
         }
@@ -200,24 +200,24 @@ class Migrations
      * @param  string $indent The text indentation to use in the output
      * @return string
      */
-    public function export($var, $indent = '')
+    public function export( $var, $indent = '' )
     {
         switch ( gettype( $var ) ) {
             case 'string':
-                return '"' . addcslashes($var, "\\\$\"\r\n\t\v\f") . '"';
+                return '"' . addcslashes( $var, "\\\$\"\r\n\t\v\f" ) . '"';
             case 'array':
-                $indexed = array_keys($var) === range(0, count($var) - 1);
+                $indexed = array_keys( $var ) === range( 0, count( $var ) - 1 );
                 $r = [];
-                foreach ($var as $key => $value) {
+                foreach ( $var as $key => $value ) {
                     $r[] = "$indent    "
-                         . ($indexed ? "" : $this->export($key) . " => ")
-                         . $this->export($value, "$indent    ");
+                         . ( $indexed ? "" : $this->export( $key ) . " => " )
+                         . $this->export( $value, "$indent    " );
                 }
-                return "[\n" . implode(",\n", $r) . "\n" . $indent . "]";
+                return "[\n" . implode( ",\n", $r ) . "\n" . $indent . "]";
             case 'boolean':
                 return $var ? 'true' : 'false';
             default:
-                return var_export($var, true);
+                return var_export( $var, true );
         }
     }
 
