@@ -158,7 +158,7 @@ class Migrations
             'key' => 'group_' . uniqid(),
             'title' => 'My Field Group',
             'fields' => [
-                $fields
+                $this->fields
             ],
             'location' => [
                 $locations
@@ -222,13 +222,15 @@ class Migrations
     }
 
     /**
-     * Saves the generated code to be cached as a PHP array
+     * Generates and  the generated code to be cached as a PHP array
      * @author Oliver Tappin <oliver@hexdigital.com>
      * @return array
      */
-    public function save()
+    public function generate()
     {
-        return file_put_contents( get_theme_directory() . '/' . self::STORAGE_DIRECTORY . '/export.php', $this->export() );
+        $data = $this->export( $this->fieldGroups );
+        $data = "<?php\n\nreturn " . $data . "\n";
+        return file_put_contents( get_template_directory() . '/' . self::STORAGE_DIRECTORY . '/export.php', $data );
     }
 }
 
