@@ -1,0 +1,13 @@
+<?php
+
+// Create new instance
+$migrations = new Migrations;
+
+// Create fields
+$migrations->addFieldGroup('staff', [
+        'hide_on_screen' => ['content_editor']
+    ])
+    ->addField('image', 'Profile image')
+    ->addField('text', 'Full name')
+    ->addField('textarea', 'Job description')
+    ->addField('wysiwyg', 'Biography');
