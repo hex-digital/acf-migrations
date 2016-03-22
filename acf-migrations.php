@@ -249,7 +249,8 @@ class Migrations
     }
 
     /**
-     * Adds the field groups to Advanced Custom Fields
+     * Adds the field groups to Advanced Custom Fields. This can be used during
+     * development to stop having to re-run the migration executable.
      *
      * @author Oliver Tappin <oliver@hexdigital.com>
      * @return void
@@ -302,11 +303,19 @@ class Migrations
         // Finish final array for the last $fieldGroup
         $this->appendFieldGroupFromCache();
 
-        // Wrap acf_add_local_field_group() to each field group array
+        // Declare $data variable as blank string
+        $data = '';
 
-        // Get field groups array
-        $data = $this->export( $this->fieldGroups );
-        $data = "<?php\n\nreturn " . $data . "\n";
+        // Wrap acf_add_local_field_group() to each field group array
+        foreach ( $this->fieldGroups as $fieldGroup ) {
+            $data .= 'acf_add_local_field_group( ' . $this->export( $this->fieldGroups ) . " );\n\n";
+        }
+
+        // Remove additional line breaks
+        $data = rtrim( $data );
+
+        // Add PHP opening tag and end with line break
+        $data = "<?php\n\n" . $data . "\n";
 
         return file_put_contents( get_template_directory() . '/' . self::STORAGE_DIRECTORY . '/export.php', $data );
     }
@@ -336,3 +345,7 @@ add_action( 'activated_plugin', 'change_order_of_loaded_plugins' );
 // Include theme migrations
 $migrations_file = get_template_directory() . '/' . Migrations::STORAGE_DIRECTORY . '/migrations.php';
 if ( file_exists( $migrations_file ) ) include $migrations_file;
+
+// Include theme ACF field export
+$export_file = get_template_directory() . '/' . Migrations::STORAGE_DIRECTORY . '/export.php';
+if ( file_exists( $export_file ) ) include $export_file;
