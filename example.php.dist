@@ -5,6 +5,12 @@ $migrations = new Migrations;
 
 // Create fields
 $migrations->addFieldGroup('staff', [
+        [
+            'param' => 'post_type',
+            'operator' => '==',
+            'value' => 'page',
+        ],
+    ], [
         'hide_on_screen' => ['content_editor']
     ])
     ->addField('image', 'Profile image')
