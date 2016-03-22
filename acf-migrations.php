@@ -64,7 +64,6 @@ function migrations_options() {
 
 function migrate() {
     $migrations_file = get_template_directory() . '/' . Migrations::STORAGE_DIRECTORY . '/migrations.php';
-
     if ( ! file_exists( $migrations_file ) ) wp_die( __( 'Migrations file does not exist.' ) );
 
     include $migrations_file;
