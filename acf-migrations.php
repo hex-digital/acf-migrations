@@ -66,6 +66,7 @@ class Migrations
 
     /**
      * Returns the default field values from the ACF Pro plugin classes
+     *
      * @author Oliver Tappin <oliver@hexdigital.com>
      * @param  string $type The field type
      * @return array
@@ -267,6 +268,7 @@ class Migrations
 
     /**
      * Similar to var_export but supports PHP 5.4 array syntax
+     *
      * @author Oliver Tappin <oliver@hexdigital.com>
      * @param  mixed $var     The variable to parse as text
      * @param  string $indent The text indentation to use in the output
@@ -295,6 +297,7 @@ class Migrations
 
     /**
      * Generates and  the generated code to be cached as a PHP array
+     *
      * @author Oliver Tappin <oliver@hexdigital.com>
      * @return array
      */
