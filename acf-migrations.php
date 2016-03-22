@@ -11,6 +11,7 @@ class Migrations
 {
     protected $fields;
     protected $fieldGroups;
+    protected $fieldGroupCache;
 
     const STORAGE_DIRECTORY = 'acf';
     const ACF_PLUGIN_LOCATION = 'advanced-custom-fields-pro/acf.php';
@@ -18,7 +19,9 @@ class Migrations
 
     public function __construct()
     {
-        // Check for ACF Pro Plugin
+        if ( ! $this->localFieldGroupsEnabled() ) {
+            throw new \Exception( 'Local field groups are not enabled' );
+        }
     }
 
     /**
@@ -91,13 +94,14 @@ class Migrations
      * @author Oliver Tappin <oliver@hexdigital.com>
      * @param  string $name The name of the field
      * @param  string $type The field type
+     * @param  array $options The field type
      * @return array
      */
     public function addField( $type, $name, $options = false )
     {
         $defaults = $this->getDefaults( $type );
 
-        // Add fields to field group
+        // Add fields data to field
         $fields = [
             'key' => 'field_' . uniqid(),
             'label' => $this->sanitiseLabel( $name ),
@@ -120,10 +124,7 @@ class Migrations
         if ( $options && is_array( $options ) ) {
 
             // Validate options
-            if ( isset( $options['key'] ) ) unset( $options['key'] );
-            if ( isset( $options['label'] ) ) unset( $options['label'] );
-            if ( isset( $options['name'] ) ) unset( $options['name'] );
-            if ( isset( $options['type'] ) ) unset( $options['type'] );
+            $options = $this->validate( ['key', 'label', 'name', 'type'], $options );
 
             // Replace any options passed into the method
             foreach ( $options as $option_key => $option_value ) {
@@ -148,15 +149,21 @@ class Migrations
     /**
      * Creates the array for a field group
      *
-     * @param [type] $name      [description]
-     * @param [type] $locations [description]
+     * @author Oliver Tappin <oliver@hexdigital.com>
+     * @param string $name     The name of the field group
+     * @param array $locations The locations array
+     * @param array $options   The options array
+     * @return class           The migrations class
      */
-    public function addFieldGroup( $name, $locations = false )
+    public function addFieldGroup( $name, $locations = [], $options = false )
     {
-        // Add defined field group array with values to memory
-        $this->fieldGroups[] = [
+        // Add cached field group data to memory
+        $this->appendFieldGroupFromCache();
+
+        // Add field groups data to field group
+        $fieldGroup = [
             'key' => 'group_' . uniqid(),
-            'title' => 'My Field Group',
+            'title' => $this->sanitiseLabel( $name ),
             'fields' => [
                 $this->fields
             ],
@@ -173,7 +180,72 @@ class Migrations
             'description' => '',
         ];
 
+        // Check to see if options have been defined
+        if ( $options && is_array( $options ) ) {
+
+            // Validate options
+            $options = $this->validate( ['key', 'title', 'fields', 'location'], $options);
+
+            // Replace any options passed into the method
+            foreach ( $options as $option_key => $option_value ) {
+
+                // Check to see if the option is available
+                if ( ! isset( $fieldGroup[ $option_key ] ) ) {
+                    continue;
+                }
+
+                $fieldGroup[ $option_key ] = $option_value;
+            }
+
+        }
+
+        // Cache defined field group array
+        $this->fieldGroupCache = $fieldGroup;
+
         return $this;
+    }
+
+    /**
+     * Appends the cached field group array to the field groups property
+     *
+     * @author Oliver Tappin <oliver@hexdigital.com>
+     * @return boolean
+     */
+    public function appendFieldGroupFromCache()
+    {
+        if ( $this->fieldGroupCache !== null ) {
+            $this->fieldGroupCache['fields'] = $this->fields;
+            $this->fieldGroups[] = $this->fieldGroupCache;
+            $this->fieldGroupCache = null;
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Validates option keys and removes them from the array
+     *
+     * @author Oliver Tappin <oliver@hexdigital.com>
+     * @param  string|array $key The key to remove
+     * @param  array $array      The options array
+     * @return array
+     */
+    public function validate($key, $array)
+    {
+        if ( is_string( $key ) ) {
+            if ( isset( $array[$key] ) ) {
+                unset( $array[$key] );
+            }
+        }
+
+        if ( is_array( $key ) ) {
+            foreach ( $key as $option ) {
+                $array = $this->validate( $option, $array );
+            }
+        }
+
+        return $array;
     }
 
     /**
@@ -184,9 +256,8 @@ class Migrations
      */
     public function addFieldGroups()
     {
-        if ( ! $this->localFieldGroupsEnabled() ) {
-            throw new \Exception( 'Local field groups are not enabled' );
-        }
+        // Finish final array for the last $fieldGroup
+        $this->appendFieldGroupFromCache();
 
         foreach ( $this->fieldGroups as $fieldGroup ) {
             acf_add_local_field_group( $fieldGroup );
@@ -228,8 +299,15 @@ class Migrations
      */
     public function generate()
     {
+        // Finish final array for the last $fieldGroup
+        $this->appendFieldGroupFromCache();
+
+        // Wrap acf_add_local_field_group() to each field group array
+
+        // Get field groups array
         $data = $this->export( $this->fieldGroups );
         $data = "<?php\n\nreturn " . $data . "\n";
+
         return file_put_contents( get_template_directory() . '/' . self::STORAGE_DIRECTORY . '/export.php', $data );
     }
 }
