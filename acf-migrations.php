@@ -3,7 +3,7 @@
  * Plugin Name: ACF Migrations
  * Plugin URI: https://github.com/hex-digital/acf-migrations
  * Description: An easy way to migrate local fields and field groups using readable object oriented syntax (without the need for huge arrays)
- * Author: Oliver Tappin
+ * Author: Hex Digital
  * Version: 0.0.1
  */
 
