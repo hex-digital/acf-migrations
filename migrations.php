@@ -304,11 +304,15 @@ class Migrations
 
         // Wrap acf_add_local_field_group() to each field group array
         foreach ( $this->fieldGroups as $fieldGroup ) {
-            $data .= 'acf_add_local_field_group( ' . $this->export( $this->fieldGroups ) . " );\n\n";
+            $data .= '    acf_add_local_field_group( ' . $this->export( $this->fieldGroups, '    ' ) . " );\n\n";
         }
 
         // Remove additional line breaks
         $data = rtrim( $data );
+
+        // Add function to use in hook
+        $data = "function acf_migrations_add_local_field_groups() {\n\n" . $data;
+        $data .= "\n\n}\n\nadd_action( 'acf/init', 'acf_migrations_add_local_field_groups' );";
 
         // Add PHP opening tag and end with line break
         $data = "<?php\n\n" . $data . "\n";
