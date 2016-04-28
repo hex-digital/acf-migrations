@@ -49,7 +49,7 @@ function migrate() {
     include $migrations_file;
 
     if ( $migrations instanceof Migrations ) {
-        return $migrations->generate();
+        return $migrations->generate( get_template_directory() );
     }
 
     return false;

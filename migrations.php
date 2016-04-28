@@ -11,28 +11,6 @@ class Migrations
     const FIELD_PREFIX = 'field_';
     const FIELD_GROUP_PREFIX = 'group_';
 
-    const ACF_PLUGIN_LOCATION = 'advanced-custom-fields-pro/acf.php';
-    const ACF_FIELDS_LOCATION = 'advanced-custom-fields-pro/fields';
-
-    public function __construct()
-    {
-        if ( ! $this->localFieldGroupsEnabled() ) {
-            throw new \Exception( 'Local field groups are not enabled' );
-        }
-    }
-
-    /**
-     * Check to see if the Advanced Custom Fields local group option is
-     * available to use
-     *
-     * @author Oliver Tappin <oliver@hexdigital.com>
-     * @return boolean
-     */
-    private function localFieldGroupsEnabled()
-    {
-        return function_exists( 'acf_add_local_field_group' );
-    }
-
     /**
      * Sanitise the label for the field array
      *
@@ -293,7 +271,7 @@ class Migrations
      * @author Oliver Tappin <oliver@hexdigital.com>
      * @return array
      */
-    public function generate()
+    public function generate( $template_directory )
     {
         // Finish final array for the last $fieldGroup
         $this->appendFieldGroupFromCache();
@@ -319,6 +297,6 @@ class Migrations
         // Add PHP opening tag and end with line break
         $data = "<?php\n\n" . $data . "\n";
 
-        return file_put_contents( get_template_directory() . '/' . self::STORAGE_DIRECTORY . '/export.php', $data );
+        return file_put_contents( $template_directory . '/' . self::STORAGE_DIRECTORY . '/export.php', $data );
     }
 }
