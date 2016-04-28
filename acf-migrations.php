@@ -10,27 +10,6 @@
 // Include the migrations class
 include 'migrations.php';
 
-// Ensure the ACF Pro plugin loads first
-add_action( 'activated_plugin', 'change_order_of_loaded_plugins' );
-
-function change_order_of_loaded_plugins() {
-
-    // Get the array of all active plugins
-    $active_plugins = get_option( 'active_plugins' );
-
-    // Get the ACF Pro plugin details to check against the array
-    $acf_plugin = plugin_basename( self::ACF_PLUGIN_LOCATION );
-    $acf_plugin_key = array_search( $acf_plugin, $active_plugins );
-
-    // If the $plugin_key value is 0, then the ACF Pro plugin is already first
-    // in the array so there's no need to continue
-    if ( $acf_plugin_key ) {
-        array_splice( $active_plugins, $acf_plugin_key, 1 );
-        array_unshift( $active_plugins, $acf_plugin );
-        update_option( 'active_plugins', $active_plugins );
-    }
-}
-
 // Add the generation button to the admin menu
 add_action( 'admin_menu', 'migrations_menu' );
 
@@ -74,7 +53,3 @@ function migrate() {
 
     return false;
 }
-
-// Include theme ACF field export
-$export_file = get_template_directory() . '/' . Migrations::STORAGE_DIRECTORY . '/export.php';
-if ( file_exists( $export_file ) ) include $export_file;
