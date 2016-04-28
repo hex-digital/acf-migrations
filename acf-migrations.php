@@ -4,6 +4,7 @@
  * Plugin URI: https://github.com/hex-digital/acf-migrations
  * Description: An easy way to migrate local fields and field groups using readable object oriented syntax (without the need for huge arrays)
  * Author: Hex Digital
+ * Author URI: http://hexdigital.com
  * Version: 0.0.1
  */
 

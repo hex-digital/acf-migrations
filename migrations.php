@@ -304,9 +304,6 @@ class Migrations
         // Declare $data variable as blank string
         $data = '';
 
-        // Wrap the code in a function check
-        $data .= "if ( function_exists( 'acf_add_local_field_group' ) ) {\n\n";
-
         // Wrap acf_add_local_field_group() to each field group array
         foreach ( $this->fieldGroups as $fieldGroup ) {
             $data .= $indentation . 'acf_add_local_field_group( ' . $this->export( $fieldGroup, $indentation ) . " );\n\n";
@@ -315,8 +312,9 @@ class Migrations
         // Remove additional line breaks
         $data = rtrim( $data );
 
-        // Complete the if statement function check
-        $data .= "\n}";
+        // Add function to use in hook
+        $data = "function acf_migrations_add_local_field_groups() {\n\n" . $data;
+        $data .= "\n\n}\n\nadd_action( 'acf/init', 'acf_migrations_add_local_field_groups' );";
 
         // Add PHP opening tag and end with line break
         $data = "<?php\n\n" . $data . "\n";
