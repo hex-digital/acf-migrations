@@ -7,6 +7,10 @@ class Migrations
     protected $fieldGroupCache;
 
     const STORAGE_DIRECTORY = 'acf';
+
+    const FIELD_PREFIX = 'field_';
+    const FIELD_GROUP_PREFIX = 'group_';
+
     const ACF_PLUGIN_LOCATION = 'advanced-custom-fields-pro/acf.php';
     const ACF_FIELDS_LOCATION = 'advanced-custom-fields-pro/fields';
 
@@ -58,28 +62,29 @@ class Migrations
     }
 
     /**
-     * Returns the default field values from the ACF Pro plugin classes
+     * Sanitise the key for the field array
      *
      * @author Oliver Tappin <oliver@hexdigital.com>
-     * @param  string $type The field type
-     * @return array
+     * @param  string $name The field name
+     * @return string
      */
-    public function getDefaults( $type )
+    private function sanitiseKey( $name )
     {
-        $type = $this->sanitiseName( $type );
-        $class = 'acf_field_' . $type;
-        $acf_file = WP_PLUGIN_DIR . '/' . self::ACF_FIELDS_LOCATION . '/' . $type . '.php';
+        $name = $this->sanitiseName( $name );
+        return $name;
+    }
 
-        if ( file_exists( $acf_file ) && ! class_exists( $acf_file ) ) {
-            include_once $acf_file;
-        }
-
-        $field = new $class;
-        if ( isset( $field->defaults ) ) {
-            return $field->defaults;
-        }
-
-        return [];
+    /**
+     * Create the field key which is prefixed by the field group key and
+     * seperated with a double underscore.
+     *
+     * @author Oliver Tappin <oliver@hexdigital.com>
+     * @param  string $name The field name
+     * @return string
+     */
+    private function getFieldKey( $name ) {
+        $fieldGroupKey = substr( $this->fieldGroupCache['key'], strlen( self::FIELD_GROUP_PREFIX ) );
+        return $this->sanitiseKey( $fieldGroupKey . '__' . $name );
     }
 
     /**
@@ -89,36 +94,28 @@ class Migrations
      * @param  string $name The name of the field
      * @param  string $type The field type
      * @param  array $options The field type
+     * @param  string $key The field key
      * @return array
      */
-    public function addField( $type, $name, $options = false )
+    public function addField( $type, $name, $options = false, $key = false )
     {
-        $defaults = $this->getDefaults( $type );
+        if ( ! $key ) {
+            $key = $this->getFieldKey( $name );
+        }
 
         // Add fields data to field
         $fields = [
-            'key' => 'field_' . uniqid(),
+            'key' => self::FIELD_PREFIX . $key,
             'label' => $this->sanitiseLabel( $name ),
             'name' => $this->sanitiseName( $name ),
-            'type' => $this->sanitiseName( $type ),
-            'instructions' => '',
-            'required' => 0,
-            'conditional_logic' => 0,
-            'wrapper' => [
-                'width' => '',
-                'class' => '',
-                'id' => '',
-            ]
+            'type' => $this->sanitiseName( $type )
         ];
-
-        // Add class defaults to fields array
-        $fields += $defaults;
 
         // Check to see if options have been defined
         if ( $options && is_array( $options ) ) {
 
             // Validate options
-            $options = $this->validate( ['key', 'label', 'name', 'type'], $options );
+            $options = $this->validate( ['label', 'name', 'type'], $options );
 
             // Replace any options passed into the method
             foreach ( $options as $option_key => $option_value ) {
@@ -149,14 +146,18 @@ class Migrations
      * @param array $options   The options array
      * @return class           The migrations class
      */
-    public function addFieldGroup( $name, $locations = [], $options = false )
+    public function addFieldGroup( $name, $locations = [], $options = false, $key = false )
     {
         // Add cached field group data to memory
         $this->appendFieldGroupFromCache();
 
+        if ( ! $key ) {
+            $key = $this->sanitiseKey( $name );
+        }
+
         // Add field groups data to field group
         $fieldGroup = [
-            'key' => 'group_' . uniqid(),
+            'key' => self::FIELD_GROUP_PREFIX . $key,
             'title' => $this->sanitiseLabel( $name ),
             'fields' => [
                 $this->fields
@@ -164,21 +165,18 @@ class Migrations
             'location' => [
                 $locations
             ],
-            'menu_order' => 0,
-            'position' => 'normal',
-            'style' => 'default',
-            'label_placement' => 'top',
-            'instruction_placement' => 'label',
-            'hide_on_screen' => '',
-            'active' => 1,
-            'description' => '',
+            'options' => [
+                'position' => 'normal',
+                'hide_on_screen' => ''
+            ],
+            'menu_order' => 0
         ];
 
         // Check to see if options have been defined
         if ( $options && is_array( $options ) ) {
 
             // Validate options
-            $options = $this->validate( ['key', 'title', 'fields', 'location'], $options);
+            $options = $this->validate( ['title', 'fields', 'location'], $options);
 
             // Replace any options passed into the method
             foreach ( $options as $option_key => $option_value ) {
@@ -263,6 +261,7 @@ class Migrations
      * Similar to var_export but supports PHP 5.4 array syntax
      *
      * @author Oliver Tappin <oliver@hexdigital.com>
+     * @todo   Change double quotes to single quotes for values
      * @param  mixed $var     The variable to parse as text
      * @param  string $indent The text indentation to use in the output
      * @return string
@@ -299,16 +298,25 @@ class Migrations
         // Finish final array for the last $fieldGroup
         $this->appendFieldGroupFromCache();
 
+        // Declare the indentation variable (4 spaces)
+        $indentation = '    ';
+
         // Declare $data variable as blank string
         $data = '';
 
+        // Wrap the code in a function check
+        $data .= "if ( function_exists( 'acf_add_local_field_group' ) ) {\n\n";
+
         // Wrap acf_add_local_field_group() to each field group array
         foreach ( $this->fieldGroups as $fieldGroup ) {
-            $data .= 'acf_add_local_field_group( ' . $this->export( $this->fieldGroups ) . " );\n\n";
+            $data .= $indentation . 'acf_add_local_field_group( ' . $this->export( $fieldGroup, $indentation ) . " );\n\n";
         }
 
         // Remove additional line breaks
         $data = rtrim( $data );
+
+        // Complete the if statement function check
+        $data .= "\n}";
 
         // Add PHP opening tag and end with line break
         $data = "<?php\n\n" . $data . "\n";
