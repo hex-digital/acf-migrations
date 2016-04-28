@@ -10,6 +10,11 @@ Simply create a diretory in your theme called `acf` and add a `migrations.php` f
 
 Be sure to add `acf/export.php` to your `.gitignore` file since this will not need to be added if you can run the generated executable upon deployment of your website.
 
+After installing the plugin and successfully generating your fields, add the following code to the plugin:
+
+    $acf_export_file = __DIR__ . '/acf/export.php';
+    if ( file_exists( $acf_export_file ) ) include $acf_export_file;
+
 ### Unsupported fields
 
 The following list shows current unsupported fields which will be added in a future release.
