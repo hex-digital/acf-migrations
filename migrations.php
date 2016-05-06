@@ -3,13 +3,19 @@
 class Migrations
 {
     protected $fields;
+    protected $layouts;
+    protected $subFields;
     protected $fieldGroups;
+
+    protected $fieldsCache;
+    protected $layoutsCache;
     protected $fieldGroupCache;
 
     const STORAGE_DIRECTORY = 'acf';
 
-    const FIELD_PREFIX = 'field_';
+    const FIELD_DELIMITER = '__';
     const FIELD_GROUP_PREFIX = 'group_';
+    const FIELD_PREFIX = 'field_';
 
     /**
      * Sanitise the label for the field array
@@ -62,7 +68,7 @@ class Migrations
      */
     private function getFieldKey( $name ) {
         $fieldGroupKey = substr( $this->fieldGroupCache['key'], strlen( self::FIELD_GROUP_PREFIX ) );
-        return $this->sanitiseKey( $fieldGroupKey . '__' . $name );
+        return $this->sanitiseKey( $fieldGroupKey . self::FIELD_DELIMITER . $name );
     }
 
     /**
@@ -77,12 +83,13 @@ class Migrations
      */
     public function addField( $type, $name, $options = false, $key = false )
     {
+        // If no key is defined, generate it from the name and parents
         if ( ! $key ) {
             $key = $this->getFieldKey( $name );
         }
 
         // Add fields data to field
-        $fields = [
+        $field = [
             'key' => self::FIELD_PREFIX . $key,
             'label' => $this->sanitiseLabel( $name ),
             'name' => $this->sanitiseName( $name ),
@@ -96,20 +103,101 @@ class Migrations
             $options = $this->validate( ['label', 'name', 'type'], $options );
 
             // Replace any options passed into the method
-            foreach ( $options as $option_key => $option_value ) {
-
-                // Check to see if the option is available
-                if ( ! isset( $fields[ $option_key ] ) ) {
-                    continue;
-                }
-
-                $fields[ $option_key ] = $option_value;
-            }
+            $field = $this->replace( $field, $options );
 
         }
 
         // Add defined field type array with values to memory
-        $this->fields[] = $fields;
+        $this->fields[] = $field;
+
+        // Return Migrations object
+        return $this;
+    }
+
+    /**
+     * Creates the array syntax for subfields inside a field array
+     *
+     * @author Oliver Tappin <oliver@hexdigital.com>
+     * @param  string $name The file name of the layout
+     * @param  array $label The label of the layout
+     * @param  array $display The display type of the layout
+     * @param  array $options The field type
+     * @param  string $key The field key
+     * @return array
+     */
+    public function addLayout( $name, $label, $display = false, $options = false, $key = false )
+    {
+        // If no key is defined, generate it from the name and parents
+        if ( ! $key ) {
+            $key = $parentField['key'] . self::FIELD_DELIMITER . $this->sanitiseKey($name);
+            $key = substr( $key, strlen( self::FIELD_PREFIX ) );
+        }
+
+        // Add layout data to field
+        $layout = [
+            'key' => $key,
+            'name' => $this->sanitiseName( $name ),
+            'label' => $this->sanitiseLabel( $name ),
+            'display' => $this->validateDisplay( $display ),
+            'sub_fields' => []
+        ];
+
+        // Validate options
+        $options = $this->validate( ['label', 'name', 'type'], $options );
+
+        // Replace any options passed into the method
+        $layout = $this->replace( $layout, $options );
+
+        // Add defined layout array with values to memory
+        $this->layouts[] = $layout;
+
+        // Return Migrations object
+        return $this;
+    }
+
+    /**
+     * Creates the array syntax for subfields inside a field array
+     *
+     * @author Oliver Tappin <oliver@hexdigital.com>
+     * @param  string $name The name of the field
+     * @param  array $options The field type
+     * @param  string $key The field key
+     * @return array
+     */
+    public function addSubField( $type, $name, $options = false, $key = false )
+    {
+        $parentField = end( $this->fields );
+
+        // Check if the last field can support subfields
+        if ( ! $this->checkSubFieldSupport( $parentField['type'] ) ) {
+            return $this;
+        }
+
+        // If no key is defined, generate it from the name and parents
+        if ( ! $key ) {
+            $key = $parentField['key'] . self::FIELD_DELIMITER . $this->sanitiseKey($name);
+            $key = substr( $key, strlen( self::FIELD_PREFIX ) );
+        }
+
+        // Add fields data to field
+        $subField = [
+            'key' => self::FIELD_PREFIX . $key,
+            'label' => $this->sanitiseLabel( $name ),
+            'name' => $this->sanitiseName( $name ),
+            'type' => $this->sanitiseName( $type ),
+        ];
+
+        // Validate options
+        $options = $this->validate( ['label', 'name', 'type'], $options );
+
+        // Replace any options passed into the method
+        $subField = $this->replace( $subField, $options );
+
+        // Add defined field type array with values to memory
+        $this->fields[ ( count( $this->fields ) - 1 ) ]['subfields'][] = $subField;
+        //
+        var_dump($this->fields);
+        // $this->subFields[] = $subField;
 
         // Return Migrations object
         return $this;
@@ -157,15 +245,7 @@ class Migrations
             $options = $this->validate( ['title', 'fields', 'location'], $options);
 
             // Replace any options passed into the method
-            foreach ( $options as $option_key => $option_value ) {
-
-                // Check to see if the option is available
-                if ( ! isset( $fieldGroup[ $option_key ] ) ) {
-                    continue;
-                }
-
-                $fieldGroup[ $option_key ] = $option_value;
-            }
+            $fieldGroup = $this->replace( $fieldGroup, $options );
 
         }
 
@@ -219,20 +299,58 @@ class Migrations
     }
 
     /**
-     * Adds the field groups to Advanced Custom Fields. This can be used during
-     * development to stop having to re-run the migration executable.
+     * Replaces any options from the given field variable
      *
      * @author Oliver Tappin <oliver@hexdigital.com>
-     * @return void
+     * @param  array $fields  The field array
+     * @param  array $options Any defined options
+     * @return array          The amended field array
      */
-    public function addFieldGroups()
+    public function replace( $fields, $options )
     {
-        // Finish final array for the last $fieldGroup
-        $this->appendFieldGroupFromCache();
+        if ( is_array( $options ) ) {
+            foreach ( $options as $option_key => $option_value ) {
 
-        foreach ( $this->fieldGroups as $fieldGroup ) {
-            acf_add_local_field_group( $fieldGroup );
+                // Check to see if the option is available
+                if ( ! isset( $fields[ $option_key ] ) ) {
+                    continue;
+                }
+
+                $fields[ $option_key ] = $option_value;
+            }
         }
+
+        return $fields;
+    }
+
+    /**
+     * Validates the correct display type
+     *
+     * @author Oliver Tappin <oliver@hexdigital.com>
+     * @param  string $display The display type input
+     * @return string          The valid display type
+     */
+    public function validateDisplay( $display = false )
+    {
+        $display = $this->sanitiseKey( $display );
+
+        if ( ! $display && ! in_array( [ 'table', 'block', 'row' ] ) ) {
+            return 'block';
+        }
+
+        return $display;
+    }
+
+    /**
+     * Checks for support of sub fields
+     *
+     * @author Oliver Tappin <oliver@hexdigital.com>
+     * @param  string $fieldType The field type
+     * @return boolean
+     */
+    public function checkSubFieldSupport( $fieldType )
+    {
+        return in_array( $fieldType, ['repeater', 'flexible_content'] );
     }
 
     /**
