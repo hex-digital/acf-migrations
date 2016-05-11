@@ -261,6 +261,18 @@ class Migrations
             $key = $this->getHashedFieldKey( $key );
         }
 
+        // Allow shorter location syntax
+        if ( isset( $locations[0] ) && ! is_array( $locations[0] ) ) {
+            $locationParts = $locations;
+            $locations = [
+                [
+                    "param" => $locationParts[0],
+                    "operator" => $locationParts[1],
+                    "value" => $locationParts[2]
+                ]
+            ];
+        }
+
         // Add field groups data to field group
         $fieldGroup = [
             'key' => self::FIELD_GROUP_PREFIX . $key,
