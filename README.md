@@ -17,7 +17,4 @@ After installing the plugin and successfully generating your fields, add the fol
 
 ### Unsupported fields
 
-The following list shows current unsupported fields which will be added in a future release.
-
-* Repeater
-* Flexible
+The only unsupported field types are those which support sub fields but are nested under another subfield. For example, this plugin cannot generate the export code for a repeater field which is nested under another repeater field.

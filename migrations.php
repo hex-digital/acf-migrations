@@ -11,6 +11,8 @@ class Migrations
     protected $layoutsCache;
     protected $fieldGroupCache;
 
+    protected $fieldKeys;
+
     const STORAGE_DIRECTORY = 'acf';
 
     const FIELD_DELIMITER = '__';
@@ -66,9 +68,27 @@ class Migrations
      * @param  string $name The field name
      * @return string
      */
-    private function getFieldKey( $name ) {
+    private function getFieldKey( $name )
+    {
         $fieldGroupKey = substr( $this->fieldGroupCache['key'], strlen( self::FIELD_GROUP_PREFIX ) );
         return $this->sanitiseKey( $fieldGroupKey . self::FIELD_DELIMITER . $name );
+    }
+
+    private function getHashedFieldKey( $name )
+    {
+        $fieldKey = substr( md5( $name ), 0, 7 );
+
+        if ($this->fieldKeys === null) {
+            $this->fieldKeys = [];
+        }
+
+        if ( in_array( $fieldKey, $this->fieldKeys ) ) {
+            throw new \Exception( 'Duplicate MD5 hash found when generating field keys' );
+        }
+
+        $this->fieldKeys[] = $fieldKey;
+
+        return $fieldKey;
     }
 
     /**
@@ -86,6 +106,7 @@ class Migrations
         // If no key is defined, generate it from the name and parents
         if ( ! $key ) {
             $key = $this->getFieldKey( $name );
+            $key = $this->getHashedFieldKey( $key );
         }
 
         // Add fields data to field
@@ -127,10 +148,18 @@ class Migrations
      */
     public function addLayout( $name, $label, $display = false, $options = false, $key = false )
     {
+        $parentField = end( $this->fields );
+
+        // Check if the last field can support layouts
+        if ( ! $this->checkLayoutSupport( $parentField['type'] ) ) {
+            return $this;
+        }
+
         // If no key is defined, generate it from the name and parents
         if ( ! $key ) {
             $key = $parentField['key'] . self::FIELD_DELIMITER . $this->sanitiseKey($name);
             $key = substr( $key, strlen( self::FIELD_PREFIX ) );
+            $key = $this->getHashedFieldKey( $key );
         }
 
         // Add layout data to field
@@ -149,7 +178,7 @@ class Migrations
         $layout = $this->replace( $layout, $options );
 
         // Add defined layout array with values to memory
-        $this->layouts[] = $layout;
+        $this->fields[ ( count( $this->fields ) - 1 ) ]['layouts'][] = $layout;
 
         // Return Migrations object
         return $this;
@@ -167,6 +196,11 @@ class Migrations
     public function addSubField( $type, $name, $options = false, $key = false )
     {
         $parentField = end( $this->fields );
+        $parentLayoutKey = $parentField['key'];
+
+        if ( isset( end( $this->fields )['layouts'] ) ) {
+            $parentLayoutKey = end( end( $this->fields )['layouts'] )['key'];
+        }
 
         // Check if the last field can support subfields
         if ( ! $this->checkSubFieldSupport( $parentField['type'] ) ) {
@@ -175,11 +209,12 @@ class Migrations
 
         // If no key is defined, generate it from the name and parents
         if ( ! $key ) {
-            $key = $parentField['key'] . self::FIELD_DELIMITER . $this->sanitiseKey($name);
+            $key = $parentLayoutKey . self::FIELD_DELIMITER . $this->sanitiseKey($name);
             $key = substr( $key, strlen( self::FIELD_PREFIX ) );
+            $key = $this->getHashedFieldKey( $key );
         }
 
-        // Add fields data to field
+        // Add sub field data to field
         $subField = [
             'key' => self::FIELD_PREFIX . $key,
             'label' => $this->sanitiseLabel( $name ),
@@ -193,11 +228,15 @@ class Migrations
         // Replace any options passed into the method
         $subField = $this->replace( $subField, $options );
 
-        // Add defined field type array with values to memory
-        $this->fields[ ( count( $this->fields ) - 1 ) ]['subfields'][] = $subField;
-        //
-        var_dump($this->fields);
-        // $this->subFields[] = $subField;
+        // Check if last field requires the data to go inside the layout
+        if ( isset( $this->fields[ ( count( $this->fields ) - 1 ) ]['layouts'] ) ) {
+            // Add defined sub field array with values to the last field's memory (to the layout)
+            $this->fields[ ( count( $this->fields ) - 1 ) ]['layouts'][( count( $this->fields[ ( count( $this->fields ) - 1 ) ]['layouts'] ) - 1 )]['sub_fields'][] = $subField;
+
+        } else {
+            // Add defined sub field array with values to the last field's memory
+            $this->fields[ ( count( $this->fields ) - 1 ) ]['sub_fields'][] = $subField;
+        }
 
         // Return Migrations object
         return $this;
@@ -219,6 +258,7 @@ class Migrations
 
         if ( ! $key ) {
             $key = $this->sanitiseKey( $name );
+            $key = $this->getHashedFieldKey( $key );
         }
 
         // Add field groups data to field group
@@ -334,7 +374,7 @@ class Migrations
     {
         $display = $this->sanitiseKey( $display );
 
-        if ( ! $display && ! in_array( [ 'table', 'block', 'row' ] ) ) {
+        if ( ! in_array( $display, [ 'table', 'block', 'row' ] ) ) {
             return 'block';
         }
 
@@ -350,7 +390,19 @@ class Migrations
      */
     public function checkSubFieldSupport( $fieldType )
     {
-        return in_array( $fieldType, ['repeater', 'flexible_content'] );
+        return in_array( $fieldType, ['flexible_content', 'repeater'] );
+    }
+
+    /**
+     * Checks for support of layouts
+     *
+     * @author Oliver Tappin <oliver@hexdigital.com>
+     * @param  string $fieldType The field type
+     * @return boolean
+     */
+    public function checkLayoutSupport( $fieldType )
+    {
+        return in_array( $fieldType, ['flexible_content'] );
     }
 
     /**
