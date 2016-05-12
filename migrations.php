@@ -83,7 +83,7 @@ class Migrations
         }
 
         if ( in_array( $fieldKey, $this->fieldKeys ) ) {
-            throw new \Exception( 'Duplicate MD5 hash found when generating field keys' );
+            throw new \Exception( sprintf( 'Duplicate MD5 hash found when generating field keys: %s', $name ) );
         }
 
         $this->fieldKeys[] = $fieldKey;
@@ -318,6 +318,7 @@ class Migrations
         if ( $this->fieldGroupCache !== null ) {
             $this->fieldGroupCache['fields'] = $this->fields;
             $this->fieldGroups[] = $this->fieldGroupCache;
+            $this->fields = [];
             $this->fieldGroupCache = null;
             return true;
         }
