@@ -158,7 +158,9 @@ class Migrations
         // If no key is defined, generate it from the name and parents
         if ( ! $key ) {
             $key = $parentField['key'] . self::FIELD_DELIMITER . $this->sanitiseKey($name);
-            $key = substr( $key, strlen( self::FIELD_PREFIX ) );
+            if ( substr( $key, 0, strlen( self::FIELD_PREFIX ) ) == self::FIELD_PREFIX ) {
+                $key = substr( $key, strlen( self::FIELD_PREFIX ) );
+            }
             $key = $this->getHashedFieldKey( $key );
         }
 
@@ -212,7 +214,9 @@ class Migrations
         // If no key is defined, generate it from the name and parents
         if ( ! $key ) {
             $key = $parentLayoutKey . self::FIELD_DELIMITER . $this->sanitiseKey($name);
-            $key = substr( $key, strlen( self::FIELD_PREFIX ) );
+            if ( substr( $key, 0, strlen( self::FIELD_PREFIX ) ) == self::FIELD_PREFIX ) {
+                $key = substr( $key, strlen( self::FIELD_PREFIX ) );
+            }
             $key = $this->getHashedFieldKey( $key );
         }
 
