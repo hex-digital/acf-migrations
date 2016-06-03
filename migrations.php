@@ -189,12 +189,14 @@ class Migrations
      *
      * @author Oliver Tappin <oliver@hexdigital.com>
      * @param  string $name The name of the field
-     * @param  array $options The field type
+     * @param  int    $depth The depth of the sub field
+     * @param  array  $options The field type
      * @param  string $key The field key
      * @return array
      */
-    public function addSubField( $type, $name, $options = false, $key = false )
+    public function addSubField( $type, $name, $depth = 0, $options = false, $key = false )
     {
+
         $parentField = end( $this->fields );
         $parentLayoutKey = $parentField['key'];
 
@@ -230,12 +232,21 @@ class Migrations
 
         // Check if last field requires the data to go inside the layout
         if ( isset( $this->fields[ ( count( $this->fields ) - 1 ) ]['layouts'] ) ) {
-            // Add defined sub field array with values to the last field's memory (to the layout)
-            $this->fields[ ( count( $this->fields ) - 1 ) ]['layouts'][( count( $this->fields[ ( count( $this->fields ) - 1 ) ]['layouts'] ) - 1 )]['sub_fields'][] = $subField;
+
+            $lastLayoutFieldSubFields = &$this->fields[ ( count( $this->fields ) - 1 ) ]['layouts'];
+
+            for ( $i = 0; $i <= $depth; $i++ ) {
+                $lastLayoutFieldSubFields = &$lastLayoutFieldSubFields[ count( $lastLayoutFieldSubFields ) - 1];
+                if ($i < $depth) $lastLayoutFieldSubFields = &$lastLayoutFieldSubFields['sub_fields'];
+            }
+
+            $lastLayoutFieldSubFields['sub_fields'][] = $subField;
 
         } else {
+
             // Add defined sub field array with values to the last field's memory
             $this->fields[ ( count( $this->fields ) - 1 ) ]['sub_fields'][] = $subField;
+
         }
 
         // Return Migrations object
