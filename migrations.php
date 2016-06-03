@@ -198,7 +198,6 @@ class Migrations
      */
     public function addSubField( $type, $name, $depth = 0, $options = false, $key = false )
     {
-
         $parentField = end( $this->fields );
         $parentLayoutKey = $parentField['key'];
 
@@ -214,6 +213,7 @@ class Migrations
         // If no key is defined, generate it from the name and parents
         if ( ! $key ) {
             $key = $parentLayoutKey . self::FIELD_DELIMITER . $this->sanitiseKey($name);
+            if ( $depth > 0 ) $key .= self::FIELD_DELIMITER . (string) $depth;
             if ( substr( $key, 0, strlen( self::FIELD_PREFIX ) ) == self::FIELD_PREFIX ) {
                 $key = substr( $key, strlen( self::FIELD_PREFIX ) );
             }
@@ -379,8 +379,8 @@ class Migrations
         if ( is_array( $options ) ) {
             foreach ( $options as $option_key => $option_value ) {
 
-                // Check to see if the option is available
-                if ( ! isset( $fields[ $option_key ] ) ) {
+                // Check to see if the option has already been defined
+                if ( isset( $fields[ $option_key ] ) ) {
                     continue;
                 }
 
