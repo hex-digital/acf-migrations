@@ -23,7 +23,7 @@ For deployments, it makes sense to have a single executable file that can run in
 
     curl -o acf-migrations.phar https://raw.githubusercontent.com/hex-digital/acf-migrations/master/acf-migrations.phar
 
-You can then use the acf-migrations.phar (much like [Composer][https://getcomposer.org]) to generate your Advanced Custom Field code:
+You can then use the acf-migrations.phar (much like [Composer](https://getcomposer.org)) to generate your Advanced Custom Field code:
 
     php acf-migrations.phar -t /var/www/vhosts/example.com/wp-content/themes/my-theme
 
