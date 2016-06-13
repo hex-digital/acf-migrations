@@ -8,7 +8,7 @@ By converting 113 lines to just 20 by using this easy-to-use class, you can dram
 
 ### Set up
 
-Simply create a diretory in your theme called `acf` and add a `migrations.php` file containing the `example.php.dist` code. Once activated, the plugin will automatically generate the local Advanced Custom Fields code to be added to your project.
+Simply create a directory in your theme called `acf` and add a `migrations.php` file containing the `example.php.dist` code. Once activated, the plugin will automatically generate the local Advanced Custom Fields code to be added to your project.
 
 Be sure to add `acf/export.php` to your `.gitignore` file since this will not need to be added if you can run the generated executable upon deployment of your website.
 
