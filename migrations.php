@@ -128,6 +128,11 @@ class Migrations
 
         }
 
+        // Add support for the 'hidden' readonly option
+        if ( isset( $options['readonly'] ) ) {
+            $field['readonly'] = (int) $options['readonly'];
+        }
+
         // Add defined field type array with values to memory
         $this->fields[] = $field;
 
@@ -233,6 +238,11 @@ class Migrations
 
         // Replace any options passed into the method
         $subField = $this->replace( $subField, $options );
+
+        // Add support for the 'hidden' readonly option
+        if ( isset( $options['readonly'] ) ) {
+            $subField['readonly'] = (int) $options['readonly'];
+        }
 
         // Check if last field requires the data to go inside the layout
         if ( isset( $this->fields[ ( count( $this->fields ) - 1 ) ]['layouts'] ) ) {
@@ -352,7 +362,7 @@ class Migrations
     public function validate($key, $array)
     {
         if ( is_string( $key ) ) {
-            if ( isset( $array[$key] ) ) {
+            if ( isset( $array[$key] ) || $key == 'readonly' ) {
                 unset( $array[$key] );
             }
         }
