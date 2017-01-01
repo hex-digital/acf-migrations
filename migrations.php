@@ -291,9 +291,11 @@ class Migrations
             $locationParts = $locations;
             $locations = [
                 [
-                    "param" => $locationParts[0],
-                    "operator" => $locationParts[1],
-                    "value" => $locationParts[2]
+                    [
+                        'param' => $locationParts[0],
+                        'operator' => $locationParts[1],
+                        'value' => $locationParts[2]
+                    ]
                 ]
             ];
         }
@@ -305,9 +307,7 @@ class Migrations
             'fields' => [
                 $this->fields
             ],
-            'location' => [
-                $locations
-            ],
+            'location' => $locations,
             'options' => [
                 'position' => 'normal',
                 'hide_on_screen' => ''
