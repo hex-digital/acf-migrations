@@ -250,7 +250,7 @@ class Migrations
             $lastLayoutFieldSubFields = &$this->fields[ ( count( $this->fields ) - 1 ) ]['layouts'];
 
             for ( $i = 0; $i <= $depth; $i++ ) {
-                $lastLayoutFieldSubFields = &$lastLayoutFieldSubFields[ count( $lastLayoutFieldSubFields ) - 1];
+                $lastLayoutFieldSubFields = &$lastLayoutFieldSubFields[ count( $lastLayoutFieldSubFields ) - 1 ];
                 if ($i < $depth) $lastLayoutFieldSubFields = &$lastLayoutFieldSubFields['sub_fields'];
             }
 
@@ -259,8 +259,13 @@ class Migrations
         } else {
 
             // Add defined sub field array with values to the last field's memory
-            $this->fields[ ( count( $this->fields ) - 1 ) ]['sub_fields'][] = $subField;
+            $lastFieldSubFields = &$this->fields[ ( count( $this->fields ) - 1 ) ]['sub_fields'];
 
+            for ( $i = 1; $i <= $depth; $i++ ) {
+                $lastFieldSubFields = &$lastFieldSubFields[ count( $lastFieldSubFields ) - 1 ]['sub_fields'];
+            }
+
+            $lastFieldSubFields[] = $subField;
         }
 
         // Return Migrations object
