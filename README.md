@@ -39,7 +39,7 @@ This playground process will help you define well defined custom fields via the 
 
 #### Adding a field group
 
-Now you have a general idea of what array items make up a field cofiguration, let's look at adding our first field.
+Now you have a general idea of what array items make up a field configuration, let's look at adding our first field.
 Head over to `acf/migrations.php` and see if any existing fields exist. If so, great! You can use them as a template for adding further fields. If not, no worries, let's add one.
 
 You'll first notice the `Migrations` object has been instanced (`$migrations`). To add a field group, add the following.
