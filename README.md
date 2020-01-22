@@ -46,14 +46,14 @@ You'll first notice the `Migrations` object has been instanced (`$migrations`). 
 
 ```php
 $migrations->addFieldGroup('Our staff', [
-        [
-            'param' => 'post_type',
-            'operator' => '==',
-            'value' => 'page',
-        ],
-    ], [
-        'hide_on_screen' => ['content_editor']
-    ])
+    [
+        'param' => 'post_type',
+        'operator' => '==',
+        'value' => 'page',
+    ],
+], [
+    'hide_on_screen' => ['content_editor']
+])
 ```
 
 There are a few things to note here. Firstly, the key `Our staff` is simply the name of the field group. Secondaly, you'll
@@ -61,16 +61,16 @@ notice the array of page type binding arrays. In this example, the field group w
 want the field group to show on multiple post types, add another binding array to the configurations like so.
 
 ```php
-        [
-            'param' => 'post_type',
-            'operator' => '==',
-            'value' => 'page',
-        ],
-        [
-            'param' => 'post_type',
-            'operator' => '==',
-            'value' => 'staff',
-        ],
+    [
+        'param' => 'post_type',
+        'operator' => '==',
+        'value' => 'page',
+    ],
+    [
+        'param' => 'post_type',
+        'operator' => '==',
+        'value' => 'staff',
+    ],
 ```
 ~Note: You can bind field groups to custom post types.~
 
