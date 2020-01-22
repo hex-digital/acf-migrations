@@ -145,7 +145,7 @@ Now we have the repeater field setup, we can add sub-fields using the `addSubFie
         )
 ```
 
-Notice that this method accepts the same type, name and configuration array parameters as the `addField` method. The only difference being the `depth` parameter which is an integer outlining the depth of the sub-field. In our example, the sub-field is the at the first level under the main fields so the depth is set to 0. If, for example, you nest another repeater within, you will need to increase the depth of it's repsective sub-field parameters accordingly.
+Notice that this method accepts the same type, name and configuration array parameters as the `addField` method. The only difference being the `depth` parameter which is an integer outlining the depth of the sub-field. In our example, the sub-field is at the first level under the main fields so the depth is set to 0. If, for example, you nest another repeater within, you will need to increase the depth of it's repsective sub-field parameters accordingly.
 
 #### Flexible layouts
 
