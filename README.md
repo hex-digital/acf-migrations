@@ -87,7 +87,7 @@ trying to display the fields content on within templates or method code. The key
 
 If you want to find a the accepted field type values, you can again refer to generated export code via the playground process.
 
-Note: the example above example will apply the default configurations values for a text field. If you would like to add extra configurations to the field, please add like so
+Note: the example above will apply the default configurations values for a text field. If you would like to add extra configurations to the field, please add like so
 
 ```php
     ->addField('text', 'Full name', [
