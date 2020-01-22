@@ -95,7 +95,7 @@ Note: the example above will apply the default configurations values for a text 
     ])
 ```
 
-There a many extra configurations that can be added to fields so please play around in the export playground as stated in the prerequisite to find the key => value pairs for these settings. The example below shows a well configured image field.
+There are many extra configurations that can be added to fields so please play around in the export playground as stated in the prerequisite to find the key => value pairs for these settings. The example below shows a well configured image field.
 
 ```php
     ->addField(
