@@ -1,5 +1,20 @@
 # acf-migrations
 
+### Quick Start
+```bash
+touch acf/migrations.php && echo "<?php $migrations = new Migrations;" >> acf/migrations.php
+echo 'acf/export.php' >> .gitignore
+```
+
+Then add following code to `functions.php`
+
+```bash
+$acf_export_file = __DIR__ . '/acf/export.php';
+if ( file_exists( $acf_export_file ) ) include $acf_export_file;
+```
+
+### Description
+
 An easy way to migrate local fields and field groups using readable object oriented syntax (without the need for huge arrays).
 
 By converting 113 lines to just 20 by using this easy-to-use class, you can dramatically reduce your development time and increase your workflow.
